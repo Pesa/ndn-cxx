@@ -27,6 +27,7 @@
 #define NDN_CXX_NAME_HPP
 
 #include "ndn-cxx/name-component.hpp"
+#include "ndn-cxx/util/optional.hpp"
 
 #include <iterator>
 

@@ -79,10 +79,6 @@
 #  define NDN_CXX_UNREACHABLE std::abort()
 #endif
 
-#include "ndn-cxx/util/nonstd/any.hpp"
-#include "ndn-cxx/util/nonstd/optional.hpp"
-#include "ndn-cxx/util/nonstd/variant.hpp"
-
 #ifndef NDN_CXX_HAVE_STD_TO_STRING
 #include <boost/lexical_cast.hpp>
 #endif
@@ -143,28 +139,6 @@ to_underlying(T val) noexcept
   return static_cast<std::underlying_type_t<T>>(val);
 }
 #endif // __cpp_lib_to_underlying
-
-using ::nonstd::any;
-using ::nonstd::any_cast;
-using ::nonstd::bad_any_cast;
-using ::nonstd::make_any;
-
-using ::nonstd::optional;
-using ::nonstd::bad_optional_access;
-using ::nonstd::nullopt;
-using ::nonstd::nullopt_t;
-using ::nonstd::in_place;
-using ::nonstd::in_place_t;
-using ::nonstd::make_optional;
-
-using ::nonstd::variant;
-using ::nonstd::bad_variant_access;
-using ::nonstd::monostate;
-using ::nonstd::variant_npos;
-using ::nonstd::get;
-using ::nonstd::get_if;
-using ::nonstd::holds_alternative;
-using ::nonstd::visit;
 
 } // namespace ndn
 
