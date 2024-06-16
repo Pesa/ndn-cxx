@@ -31,7 +31,7 @@ jobs:
           show-progress: false
       - name: Determine release info
         id: info
-        run:
+        run: |
           ./waf --color=yes version
           relnotes=docs/release-notes/release-notes-$(<VERSION.info).rst
           tee -a "$GITHUB_OUTPUT" <<EOF
