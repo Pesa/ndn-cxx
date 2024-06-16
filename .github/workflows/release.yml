@@ -1,0 +1,87 @@
+name: Create release
+on:
+  workflow_call:
+    inputs:
+      submodules:
+        description: 'Whether to checkout submodules'
+        default: false
+        type: boolean
+      attest:
+        description: 'Whether to publish a signed provenance attestation for the release artifacts'
+        default: true
+        type: boolean
+
+permissions:
+  attestations: write
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    name: Release ${{ github.ref_name }}
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          # fetch-tags: true
+          submodules: ${{ inputs.submodules }}
+          show-progress: false
+      - name: Determine release info
+        id: info
+        run:
+          ./waf --color=yes version
+          relnotes=docs/release-notes/release-notes-$(<VERSION.info).rst
+          tee -a "$GITHUB_OUTPUT" <<EOF
+          version=$(<VERSION.info)
+          prerelease=$(grep -Ec 'alpha|beta|pre|rc' VERSION.info)
+          timestamp=$(git log -1 --format=%ct)
+          release-notes=$([[ -f ${relnotes} ]] && echo "${relnotes}")
+          EOF
+      - name: Create source tarball
+        env:
+          SOURCE_DATE_EPOCH: ${{ steps.info.outputs.timestamp }}
+        run: |
+          ./waf --color=yes dist
+          for f in *.tar.xz; do
+            sha256sum "$f" | tee "$f.sha256"
+          done
+      - uses: actions/upload-artifact@v4 # XXX for debugging
+        with:
+          name: tarball
+          path: ./*.tar.xz
+          compression-level: 0
+      - name: Generate signed provenance attestation
+        if: inputs.attest
+        uses: actions/attest-build-provenance@534b352d658f90498fd148d231fdbf88f3886a3a # v1.3.1
+        with:
+          subject-path: |
+            *.tar.xz
+            *.tar.xz.sha256
+      - name: Install pandoc
+        if: steps.info.outputs.release-notes
+        run: |
+          curl -fLOSs 'https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-1-amd64.deb'
+          sudo dpkg -i pandoc-*.deb
+          rm pandoc-*.deb
+      - name: Prepare release notes
+        if: steps.info.outputs.release-notes
+        run: |
+          sed -E '${{ steps.info.outputs.release-notes }}' \
+              -e '/[Rr]elease [Dd]ate:/d' \
+              -e 's|:issue:`([0-9]+)`|`#\1 <https://redmine.named-data.net/issues/\1>`__|g' \
+            | pandoc --from=rst --to=gfm --output=release-notes.md --wrap=none
+      - name: Create draft release
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
+        with:
+          draft: true
+          prerelease: ${{ !!steps.info.outputs.prerelease }}
+          name: ${{ steps.info.outputs.version }}
+          body_path: release-notes.md
+          generate_release_notes: ${{ !steps.info.outputs.release-notes }}
+          files: |
+            *.tar.xz
+            *.tar.xz.sha256
+          fail_on_unmatched_files: true
