@@ -7,7 +7,7 @@ on:
         default: false
         type: boolean
       attest:
-        description: 'Whether to publish a signed provenance attestation for the release artifacts'
+        description: 'Whether to publish a signed provenance attestation for the release assets'
         default: true
         type: boolean
 
@@ -25,7 +25,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # fetch-depth: 0
           submodules: ${{ inputs.submodules }}
           show-progress: false
       - name: Fix tag
@@ -49,16 +48,14 @@ jobs:
           SOURCE_DATE_EPOCH: ${{ steps.info.outputs.timestamp }}
         run: |
           ./waf --color=yes dist
-          for f in *.tar.xz; do
-            sha256sum "$f" | tee "$f.sha256"
+          for tarball in *.tar.xz; do
+            sha256sum "${tarball}" | tee "${tarball}.sha256"
           done
       - name: Generate signed provenance attestation
         if: inputs.attest
         uses: actions/attest-build-provenance@534b352d658f90498fd148d231fdbf88f3886a3a # v1.3.1
         with:
-          subject-path: |
-            *.tar.xz
-            *.tar.xz.sha256
+          subject-path: '*.tar.xz'
       - name: Install pandoc
         if: steps.info.outputs.release-notes
         run: |
@@ -73,6 +70,7 @@ jobs:
               -e 's|:issue:`([0-9]+)`|`#\1 <https://redmine.named-data.net/issues/\1>`__|g' \
             | pandoc --from=rst --to=gfm --output=release-notes.md --wrap=none
       - name: Create draft release
+        id: release
         uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
         with:
           draft: true
@@ -84,3 +82,4 @@ jobs:
             *.tar.xz
             *.tar.xz.sha256
           fail_on_unmatched_files: true
+      - run: echo '${{ toJson(steps.release.outputs) }}'
