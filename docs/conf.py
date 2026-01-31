@@ -10,7 +10,7 @@ import sys
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'ndn-cxx'
-copyright = '2013-2025, Regents of the University of California'
+copyright = '2013-2026, Regents of the University of California'
 author = 'Named Data Networking Project'
 
 # The short X.Y version.
@@ -29,7 +29,7 @@ today_fmt = '%Y-%m-%d'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-needs_sphinx = '4.0'
+needs_sphinx = '7.0'
 extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',

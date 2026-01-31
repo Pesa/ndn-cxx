@@ -3,18 +3,12 @@ ndn-cxx: NDN C++ Library
 
 .. toctree::
    :hidden:
-   :maxdepth: 3
 
    INSTALL
    examples
    tutorials
    specs
    manpages
-
-.. toctree::
-   :hidden:
-   :maxdepth: 1
-
    code-style
    release-notes
    releases
