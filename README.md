@@ -54,7 +54,7 @@ See [`COPYING.md`](COPYING.md) and [`COPYING.lesser`](COPYING.lesser) for detail
 ndn-cxx contains third-party software, licensed under the following licenses:
 
 * *scope-lite* by Martin Moene is licensed under the
-  [Boost Software License 1.0](https://github.com/martinmoene/scope-lite/blob/master/LICENSE.txt)
+  [Boost Software License 1.0](https://github.com/nonstd-lite/scope-lite/blob/master/LICENSE.txt)
 * *span-lite* by Martin Moene is licensed under the
-  [Boost Software License 1.0](https://github.com/martinmoene/span-lite/blob/master/LICENSE.txt)
+  [Boost Software License 1.0](https://github.com/nonstd-lite/span-lite/blob/master/LICENSE.txt)
 * The *waf* build system is licensed under the [3-clause BSD license](waf)
