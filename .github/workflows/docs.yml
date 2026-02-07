@@ -12,7 +12,7 @@ permissions: {}
 
 jobs:
   html:
-    uses: named-data/actions/.github/workflows/docs-html.yml@v1
+    uses: ./.github/workflows/docs-html.yml
     with:
       # Deploy only the master branch and release tags
       deploy: ${{ !inputs.skip-deploy && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/ndn-cxx-')) }}

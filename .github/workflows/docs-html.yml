@@ -1,0 +1,93 @@
+name: Build HTML documentation
+on:
+  workflow_call:
+    inputs:
+      submodules:
+        description: 'Whether to checkout submodules'
+        default: false
+        type: boolean
+      upload:
+        description: 'Whether to upload an archive of the documentation'
+        default: false
+        type: boolean
+      artifact-name:
+        description: 'Artifact name to use for the uploaded documentation'
+        default: docs
+        type: string
+      artifact-retention-days:
+        description: 'Number of days after which the artifact will expire'
+        default: 15
+        type: number
+      deploy:
+        description: 'Whether to deploy the documentation'
+        default: false
+        type: boolean
+      project:
+        description: 'Project name for the deployment'
+        type: string
+      version:
+        description: 'Project version for the deployment'
+        type: string
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    # If deployment is enabled, ignore errors in jobs that are not required for deploying
+    continue-on-error: ${{ inputs.deploy && !matrix.upload }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+        include:
+          - os: ubuntu-24.04
+            upload: ${{ inputs.upload || inputs.deploy }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          # fetch-depth: ${{ case(matrix.upload, 0, 1) }}
+          submodules: ${{ inputs.submodules }}
+          show-progress: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@803947b9bd8e9f986429fa0c5a41c367cd732b41 # v7.2.1
+        with:
+          version: '0.10.x'
+          enable-cache: false
+      - name: Install dependencies
+        env:
+          CACHE_DIR: ${{ runner.temp }}
+          JOB_NAME: Docs
+        run: |
+          find .jenkins.d/ -type f -name '[1-9]*.sh' -exec chmod -x '{}' +
+          ./.jenkins
+      - name: Build HTML documentation
+        run: |
+          ./waf --color=yes configure
+          ./waf --color=yes build --targets=version.hpp || true
+          ./waf --color=yes -v docs
+      - run: cat VERSION.info
+      - name: Create archive
+        if: matrix.upload
+        run: |
+          rm -rf build/docs/{.buildinfo,.doctrees,Doxyfile,doxygen.conf}
+          tar -caf docs.tar.zst -C build/docs .
+      - name: Upload archive
+        if: matrix.upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: docs.tar.zst
+          compression-level: 0
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  deploy:
+    if: false
+    needs: build
+    uses: named-data/actions/.github/workflows/docs-deployment.yml@v1
+    with:
+      project: ${{ inputs.project }}
+      version: ${{ inputs.version }}
+      artifact-name: ${{ inputs.artifact-name }}
+    secrets: inherit
