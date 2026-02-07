@@ -47,7 +47,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          # fetch-depth: ${{ case(matrix.upload, 0, 1) }}
+          fetch-depth: ${{ case(!!matrix.upload, 0, 1) }}
           submodules: ${{ inputs.submodules }}
           show-progress: false
       - name: Install uv
@@ -67,6 +67,7 @@ jobs:
           ./waf --color=yes configure
           ./waf --color=yes build --targets=version.hpp || true
           ./waf --color=yes -v docs
+      - run: git describe --always
       - run: cat VERSION.info
       - name: Create archive
         if: matrix.upload
